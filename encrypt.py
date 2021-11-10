@@ -11,40 +11,54 @@ def pad_data(data_str, size):
         to_add +='0'
     return to_add + data_str
 
+def pad_bitarray(myArray):
+    addition = 32 - len(myArray)
+    to_add = ''
+    for i in range(addition):
+        to_add += '0'
+    a = bitarray.bitarray(to_add)
+    #(to_add)
+    a.extend(myArray)
+    return a
 
 def LSBStenography(input, data, output):
     data_fp = open(data, "rb")
     raw_data = data_fp.read() # read as bytes object
+    data_ba = bitarray.bitarray()
+    data_ba.frombytes(raw_data)
+    data_ba.fill()
 
-    ba = bitarray.bitarray()
-    ba.frombytes(os.path.splitext(data)[1].encode('ascii'))
-    ba.fill()
+    extension_ba = bitarray.bitarray()
+    extension_ba.frombytes(os.path.splitext(data)[1].encode('ascii'))
+    extension_ba = pad_bitarray(extension_ba)
 
-    ba2=bitarray.bitarray(len(raw_data)*8)
-    ba2.fill()
+    length_ba = bitarray.bitarray(bin(len(raw_data)*8)[2:])
+    length_ba = pad_bitarray(length_ba)
 
-    print(len(ba2))
-    print(ba2)
-    #os.path.splitext(data)[1].encode('ascii'))
-    #data_file_extension = os.path.splitext(data)[1].encode('ascii') # read file extension in binary
-    #binary_data_file_extension = bin(int.from_bytes(data_file_extension, byteorder='big'))[2:]
-    # pad data to a length of 32
-    #binary_data_file_extension = pad_data(binary_data_file_extension, 32)
-    #binary_data_size = pad_data(bin(len(raw_data)*8)[2:], 32)
+    store_ba = extension_ba + length_ba + data_ba
+    #print(store_ba)
+    img = Image.open(input)
+    pixelMap = img.load()
 
-    #print(type(binary_data_file_extension))
-    #print(type(binary_data_size))
-    #print(type(raw_data))
-    #to_store = binary_data_file_extension + binary_data_size + raw_data
-    #print(to_store)
-
-    #final = bin(int.from_bytes(binary_data_file_extension + binary_data_size + raw_data, byteorder='little'))
-    #print(len(final))
-
-    #print(output)
-    #im = Image.open(input).getdata()
-    #newim = Image.new(im.mode, im.size)
-    #width,height = im.size
+    x = 0
+    rgb = 0
+    for i in range(img.size[0]):
+        for j in range(img.size[1]):
+            pixel = list(img.getpixel((i,j)))
+            if(x <= len(store_ba)-3):
+                pixel[0] &= 255 if store_ba[x] else 254
+                pixel[1] &= 255 if store_ba[x+1] else 254
+                pixel[2] &= 255 if store_ba[x+2] else 254
+                x+=3
+            elif (x <= len(store_ba)-2):
+                pixel[0] &= 255 if store_ba[x] else 254
+                pixel[1] &= 255 if store_ba[x+1] else 254
+                x+=2
+            elif (x <= len(store_ba)-1):
+                pixel[0] &= 255 if store_ba[x] else 254
+                x+=1
+            img.putpixel((i,j), tuple(pixel))
+    img.save(output)
 
 
 
@@ -60,7 +74,6 @@ def LSBStenographySanityCheck(input, data):
     if not os.path.exists(data): # check the data file exists
         print("Data file {} not found".format(data))
         sys.exit(-1)
-
     # Checks data can fit in the space provided in the image   
     with Image.open(input) as image:
         hidingSpace = len(image.getdata())*3
