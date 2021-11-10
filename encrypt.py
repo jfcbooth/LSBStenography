@@ -4,12 +4,11 @@ import argparse
 import os
 import sys
 
-def pad_data(data_str, size):
-    addition = 32 - len(data_str)
-    to_add = ''
-    for i in range(addition):
-        to_add +='0'
-    return to_add + data_str
+def setBit(num, value):
+    num = list(bin(num))
+    num[-1] = str(value)
+    num = ''.join(num)
+    return int(num,2)
 
 def pad_bitarray(myArray):
     addition = 32 - len(myArray)
@@ -36,29 +35,32 @@ def LSBStenography(input, data, output):
     length_ba = pad_bitarray(length_ba)
 
     store_ba = extension_ba + length_ba + data_ba
-    #print(store_ba)
+
     img = Image.open(input)
-    pixelMap = img.load()
 
     x = 0
     rgb = 0
+    t = 0
     for i in range(img.size[0]):
         for j in range(img.size[1]):
             pixel = list(img.getpixel((i,j)))
+
             if(x <= len(store_ba)-3):
-                pixel[0] &= 255 if store_ba[x] else 254
-                pixel[1] &= 255 if store_ba[x+1] else 254
-                pixel[2] &= 255 if store_ba[x+2] else 254
+                pixel[0] = setBit(pixel[0], store_ba[x])
+                pixel[1] = setBit(pixel[1], store_ba[x+1])
+                pixel[2] = setBit(pixel[2], store_ba[x+2])
                 x+=3
             elif (x <= len(store_ba)-2):
-                pixel[0] &= 255 if store_ba[x] else 254
-                pixel[1] &= 255 if store_ba[x+1] else 254
+                pixel[0] = setBit(pixel[0], store_ba[x])
+                pixel[1] = setBit(pixel[1], store_ba[x+1])
                 x+=2
             elif (x <= len(store_ba)-1):
-                pixel[0] &= 255 if store_ba[x] else 254
+                pixel[0] = setBit(pixel[0], store_ba[x])
                 x+=1
             img.putpixel((i,j), tuple(pixel))
+
     img.save(output)
+    print("Wrote {} bytes of data to {}".format(len(store_ba), output))
 
 
 
