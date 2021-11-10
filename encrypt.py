@@ -69,7 +69,7 @@ def LSBStenographySanityCheck(input, data):
         print("Input file {} not found".format(input))
         sys.exit(-1)
     
-    if os.path.splitext(input)[1] != '.png':
+    if os.path.splitext(input)[1].lower() != '.png':
         print("Input file not .png. Invalid format")
         sys.exit(-1)
 
