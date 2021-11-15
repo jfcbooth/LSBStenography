@@ -4,7 +4,7 @@ Basic python exercise using least signficiant bit stengography to hide informati
 
 # Usage
 To hide a file in an image:
-`python encrypt.py <input_image> <data_to_hide> --output <output_image>`
+`python encode.py <input_image> <data_to_hide> --output <output_image>`
 
 To discover the data that has been hidden in an image:
-`python decrypt.py <image>`
+`python decode.py <image>`
